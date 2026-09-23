@@ -377,7 +377,7 @@ def cells_to_bboxes(predictions, anchors, S, is_preds=True):
     converted_bboxes = torch.cat((best_class, scores, x, y, w_h), dim=-1).reshape(BATCH_SIZE, num_anchors * S * S, 6)
     return converted_bboxes.tolist()
 
-def check_class_accuracy(model, loader, threshold):
+def check_class_accuracy(model, loader, threshold): # threshold để xác nhận ngưỡng xác suất coi đó là vật thể
     model.eval()
     tot_class_preds, correct_class = 0, 0
     tot_noobj, correct_noobj = 0, 0
@@ -390,18 +390,18 @@ def check_class_accuracy(model, loader, threshold):
 
         for i in range(3):
             y[i] = y[i].to(config.DEVICE)
-            obj = y[i][..., 0] == 1 # in paper this is Iobj_i
+            obj = y[i][..., 0] == 1 # in paper this is Iobj_i # lấy ra các cell và anchor chứa object ở label
             noobj = y[i][..., 0] == 0  # in paper this is Iobj_i
 
-            correct_class += torch.sum(
+            correct_class += torch.sum( # tính số cell đoán đúng class
                 torch.argmax(out[i][..., 5:][obj], dim=-1) == y[i][..., 5][obj]
-            )
-            tot_class_preds += torch.sum(obj)
+            ) # out[i][..., 5:][obj] trả về tensor 2 chiều, dim=-1 chỉ ra chiều sẽ được lấy ra để tính argmax(trả về index của số to nhất), y[i][..., 5][obj] trả về mảng 1 chiều chỉ chứa class
+            tot_class_preds += torch.sum(obj) # số object trong 1 ảnh thực tế
 
-            obj_preds = torch.sigmoid(out[i][..., 0]) > threshold
-            correct_obj += torch.sum(obj_preds[obj] == y[i][..., 0][obj])
+            obj_preds = torch.sigmoid(out[i][..., 0]) > threshold # trả về một tensor true,false với true là > threshold
+            correct_obj += torch.sum(obj_preds[obj] == y[i][..., 0][obj]) # tính số cell đoán đúng có vật thể
             tot_obj += torch.sum(obj)
-            correct_noobj += torch.sum(obj_preds[noobj] == y[i][..., 0][noobj])
+            correct_noobj += torch.sum(obj_preds[noobj] == y[i][..., 0][noobj]) # tính số cell đoán đúng không có vật thể
             tot_noobj += torch.sum(noobj)
 
     print(f"Class accuracy is: {(correct_class/(tot_class_preds+1e-16))*100:2f}%")
