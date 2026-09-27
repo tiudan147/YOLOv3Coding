@@ -43,7 +43,9 @@ pip install torch torchvision numpy pandas opencv-python albumentations matplotl
 ```
 
 ### 2. Chuẩn bị dữ liệu
-Bộ dữ liệu đặt theo cấu trúc thư mục được khai báo trong `config.py`:
+Tải bộ dữ liệu PASCAL VOC đã được chuẩn hóa cho YOLO tại Kaggle: [PASCAL VOC Dataset (Kaggle)](https://www.kaggle.com/datasets/aladdinpersson/pascal-voc-yolo-works-with-albumentations)
+
+Giải nén và đặt theo cấu trúc thư mục được khai báo trong `config.py`:
 ```text
 PASCAL_VOC/
 ├── images/
