@@ -1,10 +1,72 @@
-# Ghi Chép Quá Trình Code Lại YOLOv3 Từ Đầu
+# YOLOv3 from Scratch (PyTorch Implementation)
 
-Tài liệu này tóm tắt ngắn gọn các kiến thức và kinh nghiệm cốt lõi được rút ra trực tiếp từ các ghi chú và comment trong từng file code của dự án.
+Dự án tự hiện thực hóa mô hình phát hiện vật thể **YOLOv3 (You Only Look Once v3)** từ số 0 bằng PyTorch dựa trên paper gốc *"YOLOv3: An Incremental Improvement"* của Joseph Redmon & Ali Farhadi. 
+
+
+
+## 📑 Mục lục
+1. [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
+2. [Cài đặt & Cách chạy nhanh (Quickstart)](#-cài-đặt--cách-chạy-nhanh-quickstart)
+3. [Những kiến thức cốt lõi đúc kết từ dự án](#-những-kiến-thức-cốt-lõi-đúc-kết-từ-dự-án)
+   - [1. Xử lý Dữ liệu (`dataset.py`)](#1-xử-lý-dữ-liệu-datasetpy)
+   - [2. Hàm Loss (`loss.py`)](#2-hàm-loss-losspy)
+   - [3. Kiến trúc Mô hình (`model.py`)](#3-kiến-trúc-mô-hình-modelpy)
+   - [4. Huấn luyện Mô hình (`train.py`)](#4-huấn-luyện-mô-hình-trainpy)
+   - [5. Tiện ích & Đánh giá (`utils.py`, `config.py`)](#5-tiện-ích--đánh-giá-utilspy-configpy)
+   - [6. Chạy Thực Tế (`inference.py`)](#6-chạy-thực-tế-inferencepy)
+   - [7. Đúc kết & Hướng phát triển (`note.md`)](#7-đúc-kết--hướng-phát-triển-notemd)
+4. [Tác giả](#-tác-giả)
 
 ---
 
-## 1. Xử lý Dữ liệu (`dataset.py`)
+## 📂 Cấu trúc thư mục
+
+```text
+├── config.py             
+├── dataset.py            
+├── model.py              
+├── loss.py               
+├── utils.py              
+├── train.py              
+├── inference.py          
+└── note.md               
+└── remote_training.ipynb 
+```
+
+---
+
+## 🚀 Cài đặt & Cách chạy nhanh (Quickstart)
+
+### 1. Cài đặt môi trường
+```bash
+pip install torch torchvision numpy pandas opencv-python albumentations matplotlib tqdm
+```
+
+### 2. Chuẩn bị dữ liệu
+Bộ dữ liệu đặt theo cấu trúc thư mục được khai báo trong `config.py`:
+```text
+PASCAL_VOC/
+├── images/
+├── labels/
+├── train.csv
+└── test.csv
+```
+
+### 3. Huấn luyện mô hình
+```bash
+python train.py
+```
+
+### 4. Chạy Real-Time Inference với Webcam
+```bash
+python inference.py
+```
+
+---
+
+## 🧠 Những kiến thức cốt lõi đúc kết từ dự án
+
+### 1. Xử lý Dữ liệu (`dataset.py`)
 - **Định dạng nhãn gốc:** Dạng `[class, x, y, w, h]` chuẩn hóa về `[0, 1]`. Dùng `np.roll` để đổi thứ tự thành `[x, y, w, h, class]`.
 - **Cấu trúc Target:** Gồm 3 tensor tương ứng 3 scale (`S = [13, 26, 52]`), mỗi tensor có kích thước `[num_anchors_per_scale, S, S, 6]` với 6 giá trị là `[objectness, x, y, w, h, class]`.
 - **Cơ chế gán Anchor:**
@@ -23,7 +85,7 @@ Tài liệu này tóm tắt ngắn gọn các kiến thức và kinh nghiệm c�
 
 ---
 
-## 2. Hàm Loss (`loss.py`)
+### 2. Hàm Loss (`loss.py`)
 - **Tách nhãn bằng Boolean Mask:**
   - `obj = target[..., 0] == 1`: Lấy cell/anchor có chứa vật thể.
   - `noobj = target[..., 0] == 0`: Lấy cell/anchor không có vật thể (tự động bỏ qua các cell có giá trị `-1`).
@@ -41,7 +103,7 @@ Tài liệu này tóm tắt ngắn gọn các kiến thức và kinh nghiệm c�
 
 ---
 
-## 3. Kiến trúc Mô hình (`model.py`)
+### 3. Kiến trúc Mô hình (`model.py`)
 - **Cấu hình mạng:**
   - Tuple `(filters, kernel_size, stride)`: Conv layer.
   - List `["B", repeats]`: Khối Residual Block lặp lại.
@@ -57,7 +119,7 @@ Tài liệu này tóm tắt ngắn gọn các kiến thức và kinh nghiệm c�
 
 ---
 
-## 4. Huấn luyện Mô hình (`train.py`)
+### 4. Huấn luyện Mô hình (`train.py`)
 - **Đồng bộ thiết bị:** Toàn bộ tensor đưa vào mô hình (ảnh, nhãn 3 scale, anchors) đều phải đưa về cùng device (`config.DEVICE`).
 - **Mixed Precision Training (PyTorch AMP):**
   - Dùng `torch.cuda.amp.autocast()`: Tự động chuyển đổi giữa float16 và float32 để tăng tốc.
@@ -68,7 +130,7 @@ Tài liệu này tóm tắt ngắn gọn các kiến thức và kinh nghiệm c�
 
 ---
 
-## 5. Các Hàm Tiện Ích & Đánh Giá (`utils.py`, `config.py`)
+### 5. Tiện ích & Đánh giá (`utils.py`, `config.py`)
 - **Ngưỡng cấu hình (`config.py`):**
   - `CONF_THRESHOLD = 0.5`: Ngưỡng xác suất để xác nhận trong cell có object hay không.
   - `MAP_IOU_THRESH = 0.5`: Ngưỡng IoU để tính mAP.
@@ -82,13 +144,13 @@ Tài liệu này tóm tắt ngắn gọn các kiến thức và kinh nghiệm c�
 
 ---
 
-## 6. Chạy Thực Tế (`inference.py`)
+### 6. Chạy Thực Tế (`inference.py`)
 - Chuyển mô hình sang `model.eval()` để không tính gradient, giúp tăng tốc độ dự đoán.
 - Đọc frame webcam qua OpenCV, resize, chuẩn hóa, đưa qua model, decode bằng `cells_to_bboxes`, lọc qua NMS và vẽ box, label lên màn hình theo thời gian thực.
 
 ---
 
-## 7. Đúc Kết & Hướng Phát Triển (`note.md`)
+### 7. Đúc kết & Hướng phát triển (`note.md`)
 - **Hiện trạng:** Mô hình YOLOv3 còn khá nặng khi chạy trên máy cá nhân (R7 5800H), mới thử nghiệm trên PASCAL_VOC.
 - **3 Cấp độ can thiệp khi tối ưu mô hình:**
   1. *Dữ liệu:* Augmentation khác, crop khác, thay đổi image size, cân bằng class (class balancing).
@@ -96,3 +158,9 @@ Tài liệu này tóm tắt ngắn gọn các kiến thức và kinh nghiệm c�
   3. *Kiến trúc:* Thay đổi backbone, freeze/unfreeze backbone, thêm/bớt layer, đổi activation, train from scratch vs pretrained.
 - **Phân tích lỗi dự đoán cần theo dõi:** False Positive, False Negative, Wrong class, Bad localization, Small objects, Occlusion, Crowded scene, Low-quality image.
 - **Hướng phát triển tiếp theo:** Bài toán Tracking (đếm vật thể, theo dõi xe, đo tốc độ) và Sequence Modeling (phát hiện hành động bất thường, quỹ đạo).
+
+---
+
+## 👨‍💻 Tác giả
+* **Nguyễn Tiến Đan**
+* Dự án phục vụ mục đích nghiên cứu chuyên sâu về kiến trúc mạng học sâu (Deep Learning) và Thị giác máy tính (Computer Vision).

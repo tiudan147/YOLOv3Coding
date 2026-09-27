@@ -3,5 +3,5 @@ __pycache__/
 *.pth.tar
 *.pth
 *.pt
-notes.md
+note.md
 PASCAL_VOC/
