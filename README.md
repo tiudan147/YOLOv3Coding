@@ -81,7 +81,7 @@ python inference.py
   - Tọa độ tâm trong cell: `x_cell = S * x - j`, `y_cell = S * y - i`
   - Kích thước theo cell: `width_cell = width * S`, `height_cell = height * S`
 - **Xử lý Anchor gây nhiễu (`ignore_iou_thresh = 0.5`):**
-  - Các anchor có IoU $> 0.5$ với box nhưng không phải anchor tốt nhất sẽ được gán `objectness = -1`.
+  - Các anchor có IoU > 0.5 với box nhưng không phải anchor tốt nhất sẽ được gán `objectness = -1`.
   - *Mục đích:* Không coi các anchor này là sai (no-object), tránh việc mô hình phạt nhầm dự đoán đúng.
 - **Xử lý ảnh:** Bật `LOAD_TRUNCATED_IMAGES = True` để tránh lỗi ảnh bị cụt; chuyển ảnh về RGB; dùng Albumentations để biến đổi đồng thời cả ảnh và bboxes.
 
@@ -138,9 +138,9 @@ python inference.py
   - `MAP_IOU_THRESH = 0.5`: Ngưỡng IoU để tính mAP.
   - `NMS_IOU_THRESH = 0.45`: Ngưỡng loại bỏ box trùng (ngưỡng cao dễ trùng nhiều box, ngưỡng thấp ít box trùng hơn).
 - **Non-Maximum Suppression (NMS):**
-  - Lọc bỏ các box có score $< \text{threshold}$.
+  - Lọc bỏ các box có `score < threshold`.
   - Sắp xếp giảm dần theo điểm xác suất.
-  - Duyệt từng box cao nhất và loại bỏ các box khác cùng class có $\text{IoU} \ge \text{iou\_threshold}$.
+  - Duyệt từng box cao nhất và loại bỏ các box khác cùng class có `IoU >= iou_threshold`.
 - **cells_to_bboxes:** Chuyển đổi tensor dự đoán từ hệ tọa độ cell của từng scale về tọa độ chuẩn hóa toàn ảnh $[x, y, w, h]$ để vẽ hoặc tính mAP.
 - **check_class_accuracy:** Đo riêng biệt 3 chỉ số: tỉ lệ đoán đúng class, tỉ lệ đoán đúng cell có object, và tỉ lệ đoán đúng cell không có object (`noobj`).
 
